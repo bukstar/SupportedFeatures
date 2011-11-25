@@ -3,24 +3,57 @@
         <head>
         <title>My Page</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
+        <link rel="stylesheet" href="jquery_mobi_1_0/jquery.mobile-1.0.min.css" />
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
-        <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+        <script type="text/javascript" src="jquery_mobi_1_0/jquery.mobile-1.0.min.js"></script>
+
+
+
+        <script type="text/javascript" charset="utf-8" src="phonegap_1_2/Android/phonegap-1.2.0.js"></script>
+    <script type="text/javascript" charset="utf-8">
+
+    // Warten auf PhoneGap
+    //
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // PhoneGap ist geladen
+    function onDeviceReady() {
+        var element = document.getElementById('deviceProperties');
+
+        element.innerHTML = 'Device Name: '     + device.name     + '<br />' +
+                            'Device PhoneGap: ' + device.phonegap + '<br />' +
+                            'Device Platform: ' + device.platform + '<br />' +
+                            'Device UUID: '     + device.uuid     + '<br />' +
+                            'Device Version: '  + device.version  + '<br />';
+    }
+    </script>
+
+
+
 </head>
 <body>
 
 <div data-role="page">
 
         <div data-role="header">
-                <h1>My Title</h1>
+                <h1>Supported Features</h1>
         </div><!-- /header -->
+
+
+        <p id="deviceProperties">Laden Ger&auml;tedaten...</p>
+
+
+
+
+
+
 
         <div data-role="content">
                 <p>Hello world</p>
 
-                <ul data-role="listview" data-inset="true" data-filter="true">
-        <li><a href="#">Acura</a></li>
-        <li><a href="#">Audi</a></li>
+<ul data-role="listview" data-inset="true" data-filter="true">
+    <li><a href="#">Ger&auml;tedaten auslesen</a></li>
+    <li><a href="#">Audi</a></li>
         <li><a href="#">BMW</a></li>
         <li><a href="#">Cadillac</a></li>
         <li><a href="#">Ferrari</a></li>
@@ -35,7 +68,7 @@
 
         <div data-role="footer" class="footer-docs" data-theme="c">
                         <p>&copy; 2011 The jQuery Project</p>
-        </div>        
+        </div>
 
 
 
