@@ -367,7 +367,7 @@
 	<div data-role="page" id="home">
 <!-- header -->
 <div data-role="header" data-theme="b">
-<h1>Supported Features 1.0.3</h1>
+<h1>Supported Features 1.0.4</h1>
 </div>
 <!-- /header -->
 
@@ -375,7 +375,7 @@
    
   
 <ul data-role="listview" data-inset="true" data-filter="true" data-theme="c" data-dividertheme="a">
-    <li><a href="pages/test.html" rel="external">Ger&auml;tedaten auslesen</a></li>
+    <li><a href="http://realplans.de/pages/geraetedaten.html" rel="external">Ger&auml;tedaten auslesen</a></li>
     <li><a href="pages/test.html" rel="external">ACCELEROMETER</a></li>
     <li><a href="pages/test.html" rel="external">CAMERA</a></li>
     <li><a href="pages/test.html" rel="external">KOMPASS</a></li>
