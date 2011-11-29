@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+        <head>
+        <title>My Page</title>
+        <meta name="layout" content="webkit" />
+                <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- <link rel="stylesheet" href="jquery_mobi_1_0/jquery.mobile-1.0.min.css" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="jquery_mobi_1_0/jquery.mobile-1.0.min.js"></script>
+               -->
+
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="http://realplans.de/phonegap_1_2/Android/phonegap-1.2.0.js"></script>
+        <script type="text/javascript">
+        function fullscreen(){var a=document.getElementsByTagName("a");for(var i=0;i<a.length;i++){if(a[i].className.match("noeffect")){}else{a[i].onclick=function(){window.location=this.getAttribute("href");return false}}}}function hideURLbar(){window.scrollTo(0,0.9)}window.onload=function(){fullscreen();hideURLbar()};
+        </script>
+
+
+
+
+
+
+                       <style>
+                .menu .delete {
+                        position: absolute;
+                        width: 70px!important;
+                        height: 30px!important;
+                        right: 10px;
+                        top: 6px;
+                        margin: 0!important;
+                        background: url("../images/delete.png") 0 0 norepeat
+                }
+
+                .hidden {
+                        display: none;
+                }
+                </style>
+
+
+                <script type="text/javascript" charset="utf-8">
+                (function my() {
+
+                        var $i = {};
+
+                        $i.hasSQL = function()
+                        {
+                                return typeof window.openDatabase == "function" ? true : false;
+                        };
+
+
+                        $i.init = function()
+                        {
+                                if (!$i.hasSQL())
+                                {
+                                        alert('No SQL Database, no fun!');
+                                        return;
+                                }
+
+                                document.getElementById('createButton').addEventListener('click', function(e){
+                                        document.getElementById('newnoteTitle').style.display = "block";
+                                        document.getElementById('newnoteForm').style.display = "block";
+                                }, true);
+
+
+                                document.getElementById('save').addEventListener('click', function(e){
+                                        var newNoteText = document.getElementById('note').value;
+
+                                        if (!$i.selected)
+                                        {
+                                                $i.db.transaction(function(t){
+                                                        t.executeSql('INSERT INTO notes (note) VALUES (?);', [newNoteText], function(t, resultSet){
+                                                                $i.displayNotes();
+                                                        }, $i.errorStatementCallback);
+                                                });
+
+                                        }
+                                        else
+                                        {
+                                                $i.db.transaction(function(t){
+                                                        t.executeSql('UPDATE notes set note=?, date=CURRENT_TIMESTAMP WHERE id=?;', [newNoteText, $i.selected], function(t, resultSet){
+                                                                $i.displayNotes();
+                                                                $i.selected = false;
+                                                        }, $i.errorStatementCallback);
+                                                });
+                                        }
+
+                                        //hide form, reset
+                                        document.getElementById('note').value = '';
+                                        document.getElementById('deleteLi').style.display = "none";
+                                        document.getElementById('newnoteTitle').style.display = "none";
+                                        document.getElementById('newnoteForm').style.display = "none";
+                                }, true);
+
+                                document.getElementById('delete').addEventListener('click', function(e){
+                                        var ok = confirm("Wirklich?");
+
+                                        if (!ok)
+                                                return;
+
+                                        $i.db.transaction(function(t){
+                                                t.executeSql('DELETE FROM notes WHERE id = ?', [$i.selected], function(t, resultSet){
+                                                        //alert(resultSet.rowsAffected);
+                                                        $i.displayNotes();
+                                                        $i.selected = false;
+                                                        document.getElementById('note').value = '';
+                                                        document.getElementById('deleteLi').style.display = "none";
+                                                        document.getElementById('newnoteTitle').style.display = "none";
+                                                        document.getElementById('newnoteForm').style.display = "none";
+                                                }, $i.errorStatementCallback);
+                                        });
+                                }, true);
+
+
+                                document.getElementById('deleteAll').addEventListener('click', function(e){
+                                        var ok = confirm("Alle Notizen loeschen?");
+
+                                        if (!ok)
+                                                return;
+
+                                                $i.db.transaction(function(t){
+                                                        t.executeSql('DELETE FROM notes', null, function(t, resultSet){
+                                                                alert(resultSet.rowsAffected + ' Notizen geloescht.');
+                                                                $i.displayNotes();
+
+                                                        }, $i.errorStatementCallback);
+                                                });
+                                }, true);
+
+                                //get current db or create
+                                $i.db = $i.prepareDatabase();
+
+                                $i.displayNotes();
+                        }
+
+                        $i.editNote = function(e)
+                        {
+                                var id = parseInt(e.currentTarget.id, 10);
+
+                                $i.db.transaction(function(t){
+                                        t.executeSql('SELECT * FROM notes WHERE id = ?', [id], function(transaction, resultSet){
+                                                //alert(resultSet.rows.length);
+                                                var row = resultSet.rows.item(0);
+                                                document.getElementById('note').value = row.note;
+                                                $i.selected = row.id;
+                                        }, $i.errorStatementCallback)
+                                });
+
+                                document.getElementById('deleteLi').style.display = "block";
+                                document.getElementById('newnoteTitle').style.display = "block";
+                                document.getElementById('newnoteForm').style.display = "block";
+
+                        }
+
+                        $i.displayNotes = function(){
+                                var existingNode = document.getElementById('existing');
+                                existingNode.innerHTML = '';
+
+                                $i.db.transaction(function(t){
+                                        t.executeSql('SELECT * FROM notes ORDER BY date DESC;', null, function(transaction, resultSet){
+                                                var i, row, newLi, newSpan, commentSpan;
+                                                //alert("got " + resultSet.rows.length + ' rows in the db');
+                                                for (i = 0; i < resultSet.rows.length; i++)
+                                                {
+                                                        row = resultSet.rows.item(i);
+                                                        //<li class="menu note" id="note1"><span class="name">Meine erste...</span></li>
+                                                        newLi = document.createElement('li');
+                                                        newLi.setAttribute('class', 'menu note');
+                                                        newLi.setAttribute('id', row.id);
+                                                        newSpan = document.createElement('span');
+                                                        newSpan.setAttribute('class', 'name');
+                                                        newSpan.textContent = row.note.substring(0,10) + '...';
+                                                        newLi.appendChild(newSpan);
+                                                        commentSpan = document.createElement('span');
+                                                        commentSpan.setAttribute('class', 'comment');
+                                                        commentSpan.textContent = row.date;
+                                                        newLi.appendChild(commentSpan);
+
+                                                        newLi.addEventListener('click', $i.editNote, false);
+
+                                                        document.getElementById('existing').appendChild(newLi);
+                                                }
+                                        }, $i.errorStatementCallback);
+                                }/*errorCallback, successCallback*/);
+                        };
+
+                        $i.errorCallback = function(error)
+                        {
+                                alert('errorCallBack: ' + error.code + ' / message: ' + error.message);
+                        };
+
+                        $i.errorStatementCallback = function(transaction, error)
+                        {
+                                alert('errorCallBack: ' + error.code + ' / message: ' + error.message);
+                                return true; //true = roll back transaction, false = execution continues
+                                //transaction kann zum error loggign verwendet werden.
+                        };
+
+
+                        $i.prepareDatabase = function()
+                        {
+
+                                //migration using:
+                                /*
+                                var db = openDatabase(shortName, "", displayName, maxSize);
+
+                                var version = db.version; // For example, "1.0"
+                                */
+                                //or try/catch
+
+                                try
+                                {
+                                        var db = openDatabase('notes', '1.0', 'Offline Notes Storage', 5*1024*1024);
+
+                                        db.transaction(function(t){
+                                                t.executeSql('CREATE TABLE IF NOT EXISTS notes (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, note TEXT, date DATE NOT NULL DEFAULT CURRENT_TIMESTAMP);');
+                                        }, $i.errorStatementCallback);
+
+                                        //if (db.changeVersion)
+                                        //        alert('can change version');
+
+                                        return db;
+                                }
+                                catch(e)
+                                {
+                                    if (e == 2)
+                                        alert("Invalid database version.");
+                                        else
+                                            alert("Unknown error "+e+".");
+                                }
+
+                        };
+
+                        addEventListener('DOMContentLoaded', $i.init, true);
+
+                }).call();
+
+
+                </script>
+
+
+
+
+
+
+                 <script type="text/javascript" charset="utf-8">
+
+    // The watch id references the current `watchHeading`
+    var watchID = null;
+
+    // Wait for PhoneGap to load
+    //
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // PhoneGap is ready
+    //
+    function onDeviceReady() {
+        startWatch();
+    }
+
+    // Start watching the compass
+    //
+    function startWatch() {
+
+        // Update compass every 3 seconds
+        var options = { frequency: 3000 };
+
+        watchID = navigator.compass.watchHeading(onSuccess, onError, options);
+    }
+
+    // Stop watching the compass
+    //
+    function stopWatch() {
+        if (watchID) {
+            navigator.compass.clearWatch(watchID);
+            watchID = null;
+        }
+    }
+
+    // onSuccess: Get the current heading
+    //
+    function onSuccess(heading) {
+        var element = document.getElementById('heading');
+        element.innerHTML = 'Heading: ' + heading.magneticHeading;
+    }
+
+    // onError: Failed to get the heading
+    //
+    function onError(compassError) {
+        alert('Compass error: ' + compassError.code);
+    }
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+     <script type="text/javascript" charset="utf-8">
+
+        function onBodyLoad() {
+         }
+
+    function holePosition() {
+
+    // Geo One-Shot API Aufruf
+    navigator.geolocation.getCurrentPosition(onSuccess, onFail);
+    }
+
+    // Wird nur aufgerufen wenn die Position erfolgreich geholt wurde
+    function onSuccess(position) {
+    var element = document.getElementById('geolocation');
+
+        element.innerHTML = 'Breitengrad: '  + position.coords.latitude + '<br>' +
+    'L&auml;ngengrad: ' + position.coords.longitude  + '<br>' +
+     'H&ouml;he: '  + position.coords.altitude  + '<br>' +
+     'Richtung: '   + position.coords.heading  + '<br>' +
+     'Geschwindigkeit: '  + position.coords.speed  + '<br>'
+    }
+
+    // Wird im Fehlerfall aufgerufen
+    function onFail() {
+        navigator.notification.alert('Immer geht was schief!');
+    }
+
+    </script>
+
+
+
+</head>
+<body onload="onBodyLoad()">
+
+<div data-role="page" data-theme="b">
+
+        <div data-role="header" data-theme="b">
+                <h1>Supported Features 1.0.3</h1>
+        </div><!-- /header -->
+<div data-role="content">
+
+       
+
+
+
+
+
+
+
+        
+                <p>Hallo kleiner Schei&szlig;er </p>
+
+<ul data-role="listview" data-inset="true" data-filter="true" data-theme="c" data-dividertheme="a">
+    <li><a href="geraetedaten.html">Ger&auml;tedaten auslesen</a></li>
+    <li><a href="test.html">ACCELEROMETER</a></li>
+        <li><a href="http://www.bild.de">CAMERA</a></li>
+        <li><a href="#addNewFeedPage">KOMPASS</a></li>
+        <li><a href="#">CONTACTS</a></li>
+        <li><a href="#">FILE</a></li>
+        <li><a href="#">GEOLOCATION</a></li>
+        <li><a href="#">MEDIA</a></li>
+        <li><a href="#">NETWORK</a></li>
+
+
+
+</ul>
+
+
+        </div><!-- /content -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <span id="msg"></span>
+                <div id="content2">
+                        <span class="graytitle">Bestehende Notizen</span>
+                        <ul class="pageitem" id="existing">
+                                <li class="menu note" id="note1"><span class="name">Meine erste...</span></li>
+                        </ul>
+                        <span id="newnoteTitle" style="display:none;" class="graytitle">Notiz bearbeiten</span>
+                        <ul id="newnoteForm" style="display:none;" class="pageitem" id="createEditNote">
+                                <li class="textbox"><textarea id="note" rows="4"></textarea></li>
+                                <li class="button" style="display:none;" id="deleteLi"><input id="delete" type="submit" value="L&ouml;schen..." /></li>
+                                <li class="button"><input id="save" type="submit" value="Speichern" /></li>
+                        </ul>
+
+                        <ul class="pageitem" id="actions">
+                                        <li class="button"><input id="createButton" type="submit" value="Neue Notiz..." /></li>
+                                        <li class="button"><input id="deleteAll" type="submit" value="Alle l&ouml;schen..." /></li>
+                        </ul>
+
+                </div>
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+<ul class="pageitem">
+				<li class="bigfield">
+					<input placeholder="text" type="text" autofocus="true"/>
+				</li>
+				<li class="bigfield">
+					<input placeholder="text autocorrect" type="text" autocorrect="on"/>
+				</li>	
+				<li class="bigfield">
+					<input placeholder="text autocapitalize off" type="text" autocapitalize="off"/>
+				</li>											
+				<li class="bigfield">
+					<input placeholder="tel" type="tel" />
+				</li>								
+				<li class="bigfield">
+					<input placeholder="url" type="url" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="email" type="email" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="password" type="password" />
+				</li>		
+				<li class="bigfield">
+					<input placeholder="number" type="number" />
+				</li>	
+				<li class="bigfield">
+					<input placeholder="text pattern" type="text" pattern="[0-9]*"/>
+				</li>				
+				<li class="checkbox"><span class="name">Checkbox </span>
+					<input type="checkbox" /> 
+				</li>	
+				<li class="radiobutton">
+					<span class="name">A</span><input name="GroupName" type="radio" value="A" />
+				</li>				
+				<li class="radiobutton">
+					<span class="name">B</span><input name="GroupName" type="radio" value="B" />
+				</li>															
+				<li class="bigfield">
+					<input type="range" value="0" min="0" max="10" step="2"/>
+				</li>																
+				<li class="bigfield">
+					<input placeholder="datetime*" type="datetime" />
+				</li>	
+				<li class="bigfield">
+					<input placeholder="date*" type="date" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="month*" type="month" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="week*" type="week" />
+				</li>	
+				<li class="bigfield">
+					<input placeholder="time*" type="time" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="datetime-local*" type="datetime-local" />
+				</li>
+				<li class="bigfield">
+					<input placeholder="color*" type="color" />
+				</li>																																	
+			</ul>			
+
+
+<br/><br/><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <div id="heading">Waiting for heading...</div>
+    <button onclick="startWatch();">Start Watching</button>
+    <button onclick="stopWatch();">Stop Watching</button>
+
+
+
+
+
+
+
+          <div data-role="footer" class="footer-docs" data-theme="c">
+                        <p>&copy; 2011 The CrossApp Project</p>
+        </div>
+
+
+         </div><!-- /page -->
+
+
+</body>
+</html>

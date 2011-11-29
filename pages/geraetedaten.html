@@ -1,1 +1,53 @@
-test
+
+<!DOCTYPE html> 
+<html> 
+  <head> 
+  <title>Page Title</title> 
+ <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
+ <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+ <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+ <script type="text/javascript" charset="utf-8" src="http://realplans.de/phonegap_1_2/Android/phonegap-1.2.0.js"></script>
+ <script type="text/javascript" charset="utf-8">
+
+    // Warten auf PhoneGap
+    //
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // PhoneGap ist geladen
+    function onDeviceReady() {
+        var element = document.getElementById('deviceProperties');
+
+        element.innerHTML = 'Device Name: '     + device.name     + '<br />' +
+                            'Device PhoneGap: ' + device.phonegap + '<br />' +
+                            'Device Platform: ' + device.platform + '<br />' +
+                            'Device UUID: '     + device.uuid     + '<br />' +
+                            'Device Version: '  + device.version  + '<br />';
+    }
+    </script>
+</head> 
+<body> 
+<div data-role="page" id="geraetedaten">
+  <div data-role="header">
+    <h1>Gerätedaten auslesen mit Phonegap</h1>
+  </div>
+
+  <div data-role="content"> 
+    
+    <p id="deviceProperties">Laden Ger&auml;tedaten...</p>
+    
+    
+    
+    <p><a href="../index.html" data-role="button" rel="external">Zurück</a></p> 
+  </div>
+  
+  
+  
+  
+<!-- footer -->
+	<div data-role="footer" class="footer-docs" data-theme="c">
+		<p>&copy; 2011 The CrossApp Project</p>
+	</div>
+<!-- /footer -->
+</div>
+</body>
+</html>
